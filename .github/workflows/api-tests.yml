@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       test_scope:
-        description: 'Zakres testów'
+        description: 'Test scope'
         required: false
         default: 'all'
         type: choice
@@ -19,7 +19,7 @@ on:
           - smoke
           - regression
       workers:
-        description: 'Liczba równoległych workerów'
+        description: 'Number of parallel workers'
         required: false
         default: '2'
 
