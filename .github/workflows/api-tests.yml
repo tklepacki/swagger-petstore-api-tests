@@ -28,6 +28,9 @@ jobs:
     name: API Tests — ${{ github.event.inputs.test_scope || 'all' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      checks: write
 
     env:
       BASE_URL: ${{ vars.BASE_URL || 'https://petstore.swagger.io/v2/' }}
