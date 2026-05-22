@@ -1,0 +1,103 @@
+name: PetStore API Tests
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      test_scope:
+        description: 'Zakres testów'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - smoke
+          - regression
+      workers:
+        description: 'Liczba równoległych workerów'
+        required: false
+        default: '2'
+
+jobs:
+  api-tests:
+    name: API Tests — ${{ github.event.inputs.test_scope || 'all' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      BASE_URL: ${{ vars.BASE_URL || 'https://petstore.swagger.io/v2/' }}
+      API_KEY:  ${{ secrets.API_KEY || 'special-key' }}
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: results.xml
+      CI: 'true'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright (no browser — API tests only)
+        run: npx playwright install --with-deps chromium
+
+      - name: Run API tests — all
+        if: ${{ github.event.inputs.test_scope == '' || github.event.inputs.test_scope == 'all' }}
+        run: |
+          npx playwright test \
+            --workers=${{ github.event.inputs.workers || '2' }} \
+            --reporter=list,html,github,junit
+        continue-on-error: true
+
+      - name: Run API tests — smoke only
+        if: ${{ github.event.inputs.test_scope == 'smoke' }}
+        run: |
+          npx playwright test \
+            --grep "@smoke" \
+            --workers=${{ github.event.inputs.workers || '2' }} \
+            --reporter=list,html,github,junit
+        continue-on-error: true
+
+      - name: Run API tests — regression only
+        if: ${{ github.event.inputs.test_scope == 'regression' }}
+        run: |
+          npx playwright test \
+            --grep "@regression" \
+            --workers=${{ github.event.inputs.workers || '2' }} \
+            --reporter=list,html,github,junit
+        continue-on-error: true
+
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Playwright API Tests
+          path: results.xml
+          reporter: java-junit
+          fail-on-error: true
+
+      - name: Upload Playwright HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ github.run_number }}
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload traces and screenshots on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results-${{ github.run_number }}
+          path: test-results/
+          retention-days: 7
