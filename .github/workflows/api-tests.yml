@@ -36,6 +36,7 @@ jobs:
       BASE_URL: ${{ vars.BASE_URL || 'https://petstore.swagger.io/v2/' }}
       API_KEY:  ${{ secrets.API_KEY || 'special-key' }}
       PLAYWRIGHT_JUNIT_OUTPUT_NAME: results.xml
+      GREP: ${{ github.event.inputs.test_scope != 'all' && github.event.inputs.test_scope || '' }}
       CI: 'true'
 
     steps:
@@ -54,28 +55,10 @@ jobs:
       - name: Install Playwright (no browser — API tests only)
         run: npx playwright install --with-deps chromium
 
-      - name: Run API tests — all
-        if: ${{ github.event.inputs.test_scope == '' || github.event.inputs.test_scope == 'all' }}
+      - name: Run API tests
         run: |
           npx playwright test \
-            --workers=${{ github.event.inputs.workers || '2' }} \
-            --reporter=list,html,github,junit
-        continue-on-error: true
-
-      - name: Run API tests — smoke only
-        if: ${{ github.event.inputs.test_scope == 'smoke' }}
-        run: |
-          npx playwright test \
-            --grep "@smoke" \
-            --workers=${{ github.event.inputs.workers || '2' }} \
-            --reporter=list,html,github,junit
-        continue-on-error: true
-
-      - name: Run API tests — regression only
-        if: ${{ github.event.inputs.test_scope == 'regression' }}
-        run: |
-          npx playwright test \
-            --grep "@regression" \
+            ${GREP:+--grep "@$GREP"} \
             --workers=${{ github.event.inputs.workers || '2' }} \
             --reporter=list,html,github,junit
         continue-on-error: true
