@@ -17,7 +17,7 @@ export const PetSchema = z.object({
   category: CategorySchema.optional(),
   // The spec marks name as required, but the shared demo API has pets without it
   name: z.string().optional(),
-  photoUrls: z.array(z.string()).optional(),
+  photoUrls: z.array(z.string().nullable()).optional(),
   tags: z.array(TagSchema).optional(),
   status: PetStatusSchema.optional(),
 });
