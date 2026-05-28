@@ -23,6 +23,9 @@ jobs:
   api-tests:
     name: API Tests — ${{ github.event.inputs.test_scope || 'all' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
 
     env:
       BASE_URL: https://petstore.swagger.io/v2/
@@ -52,3 +55,13 @@ jobs:
           npx playwright test \
             ${GREP:+--grep "@$GREP"} \
             --reporter=list,html,github,junit
+        continue-on-error: true
+
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Playwright API Tests
+          path: results.xml
+          reporter: java-junit
+          fail-on-error: true
