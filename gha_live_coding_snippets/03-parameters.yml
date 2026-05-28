@@ -1,0 +1,54 @@
+name: PetStore API Tests
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      test_scope:
+        description: 'Test scope'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - smoke
+          - regression
+
+jobs:
+  api-tests:
+    name: API Tests — ${{ github.event.inputs.test_scope || 'all' }}
+    runs-on: ubuntu-latest
+
+    env:
+      BASE_URL: https://petstore.swagger.io/v2/
+      API_KEY: special-key
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: results.xml
+      GREP: ${{ github.event.inputs.test_scope != 'all' && github.event.inputs.test_scope || '' }}
+      CI: 'true'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright (no browser — API tests only)
+        run: npx playwright install --with-deps chromium
+
+      - name: Run API tests
+        run: |
+          npx playwright test \
+            ${GREP:+--grep "@$GREP"} \
+            --reporter=list,html,github,junit
