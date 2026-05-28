@@ -8,16 +8,27 @@ on:
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
+    inputs:
+      test_scope:
+        description: 'Test scope'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - smoke
+          - regression
 
 jobs:
   api-tests:
-    name: API Tests
+    name: API Tests — ${{ github.event.inputs.test_scope || 'all' }}
     runs-on: ubuntu-latest
 
     env:
       BASE_URL: https://petstore.swagger.io/v2/
       API_KEY: special-key
       PLAYWRIGHT_JUNIT_OUTPUT_NAME: results.xml
+      GREP: ${{ github.event.inputs.test_scope != 'all' && github.event.inputs.test_scope || '' }}
       CI: 'true'
 
     steps:
@@ -39,4 +50,5 @@ jobs:
       - name: Run API tests
         run: |
           npx playwright test \
+            ${GREP:+--grep "@$GREP"} \
             --reporter=list,html,github,junit
