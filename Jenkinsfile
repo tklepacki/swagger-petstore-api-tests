@@ -63,15 +63,6 @@ pipeline {
                 allowEmptyResults: false
             )
 
-            publishHTML(target: [
-                allowMissing         : false,
-                alwaysLinkToLastBuild: true,
-                keepAll              : true,
-                reportDir            : 'playwright-report',
-                reportFiles          : 'index.html',
-                reportName           : "Playwright API Tests — #${env.BUILD_NUMBER}"
-            ])
-
             archiveArtifacts(
                 artifacts        : 'playwright-report/**',
                 allowEmptyArchive: true
