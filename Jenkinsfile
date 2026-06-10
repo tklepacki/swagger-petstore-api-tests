@@ -70,6 +70,11 @@ pipeline {
                 reportFiles          : 'index.html',
                 reportName           : "Playwright API Tests — #${env.BUILD_NUMBER}"
             ])
+
+            archiveArtifacts(
+                artifacts        : 'playwright-report/**',
+                allowEmptyArchive: true
+            )
         }
 
         failure {
