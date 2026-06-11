@@ -62,6 +62,18 @@ pipeline {
                 testResults: 'results.xml',
                 allowEmptyResults: false
             )
+
+            archiveArtifacts(
+                artifacts        : 'playwright-report/**',
+                allowEmptyArchive: true
+            )
+        }
+
+        failure {
+            archiveArtifacts(
+                artifacts        : 'test-results/**',
+                allowEmptyArchive: true
+            )
         }
     }
 }
