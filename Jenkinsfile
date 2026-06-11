@@ -1,6 +1,14 @@
 pipeline {
     agent { label 'local_machine' }
 
+    parameters {
+        choice(
+            name: 'test_scope',
+            description: 'Test scope',
+            choices: ['all', 'smoke', 'regression']
+        )
+    }
+
     triggers {
         cron('0 6 * * *')
         pollSCM('* * * * *')
@@ -10,6 +18,7 @@ pipeline {
         BASE_URL                     = 'https://petstore.swagger.io/v2/'
         API_KEY                      = 'special-key'
         PLAYWRIGHT_JUNIT_OUTPUT_NAME = 'results.xml'
+        GREP                         = "${params.test_scope != 'all' ? params.test_scope : ''}"
         CI                           = 'true'
     }
 
@@ -34,7 +43,13 @@ pipeline {
 
         stage('Run API tests') {
             steps {
-                sh 'npx playwright test --reporter=list,html,junit'
+                sh '''
+                    if [ -n "$GREP" ]; then
+                        npx playwright test --grep "@$GREP" --reporter=list,html,junit
+                    else
+                        npx playwright test --reporter=list,html,junit
+                    fi
+                '''
             }
         }
     }
