@@ -17,7 +17,7 @@ test.describe('DELETE /pet/{petId} — Delete pet', () => {
     await petClient.deleteRaw(created.id!);
     const getResponse = await petClient.getByIdRaw(created.id!);
 
-    expect(getResponse.status()).toBe(200);
+    expect(getResponse.status()).toBe(404);
   });
 
   test('returns 404 when deleting a non-existent pet @smoke', async ({ petClient }) => {
