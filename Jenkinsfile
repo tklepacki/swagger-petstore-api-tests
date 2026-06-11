@@ -43,14 +43,25 @@ pipeline {
 
         stage('Run API tests') {
             steps {
-                sh '''
-                    if [ -n "$GREP" ]; then
-                        npx playwright test --grep "@$GREP" --reporter=list,html,junit
-                    else
-                        npx playwright test --reporter=list,html,junit
-                    fi
-                '''
+                catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
+                    sh '''
+                        if [ -n "$GREP" ]; then
+                            npx playwright test --grep "@$GREP" --reporter=list,html,junit
+                        else
+                            npx playwright test --reporter=list,html,junit
+                        fi
+                    '''
+                }
             }
+        }
+    }
+
+    post {
+        always {
+            junit(
+                testResults: 'results.xml',
+                allowEmptyResults: false
+            )
         }
     }
 }
