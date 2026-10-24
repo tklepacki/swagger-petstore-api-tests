@@ -2,6 +2,8 @@ name: Playwright Tests
 run-name: PetStore API Playwright Tests
 
 on:
+  schedule:
+    - cron: "*/5 * * * *"
   push:
   
 jobs:
