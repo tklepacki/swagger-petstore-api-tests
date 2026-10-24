@@ -4,29 +4,25 @@ run-name: PetStore API Playwright Tests
 on:
   schedule:
     - cron: "*/5 * * * *"
-  workflow_dispatch:
-    inputs:
-      node_version:
-        description: 'Node.js version'
-        required: true
-        default: '22'
   push:
-  
+
 jobs:
-  Run-Tests:
+  test:
     runs-on: ubuntu-latest
-    
+
+    strategy:
+      matrix:
+        node-version: [20, 22, 24]
+
     steps:
-    
       - name: Checkout Repository
         uses: actions/checkout@v4
         
-      - name: Set up Node.js
+      - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ github.event.inputs.node_version || '22' }}
- 
-          
+          node-version: ${{ matrix.node-version }}
+      
       - name: Run Tests
         run: |
              npm ci
@@ -38,20 +34,11 @@ jobs:
         with:
           paths: results.xml
 
-      - name: Test Report
-        uses: dorny/test-reporter@v3
-        if: success() || failure()
-        with:
-          name: Playwright API Tests
-          path: results.xml
-          reporter: java-junit
-          fail-on-error: true
-
       - name: Upload Playwright Test Results
         uses: actions/upload-artifact@v4
         if: success() || failure()
         with:
-          name: test-results
+          name: test-results-${{ matrix.node-version }}
           path: |
                 results.xml
                 playwright-report
@@ -64,6 +51,6 @@ jobs:
           SLACK_COLOR: ${{ job.status == 'success' && 'good' || 'danger' }}
           SLACK_MESSAGE: |
             ${{ job.status == 'success' && '✅ Playwright Tests completed successfully' || '❌ Playwright Tests failed' }} 
-            on branch *${{ github.ref_name }}* by *${{ github.actor }}*.
+            on branch *${{ github.ref_name }}* by *${{ github.actor }}* using *Node.js ${{ matrix.node-version }}*.
             Details: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View on GitHub>
-          SLACK_TITLE: "Build Status: ${{ job.status }}"
+          SLACK_TITLE: "Build Status: ${{ job.status }} [Node.js ${{ matrix.node-version }}]"
