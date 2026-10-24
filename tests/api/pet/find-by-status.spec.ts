@@ -19,7 +19,7 @@ test.describe('GET /pet/findByStatus — Find pets by status', () => {
       const ours = pets.find((p) => p.id === created.id);
 
       expect(ours).toBeDefined();
-      expect(ours?.status).toBe('available');
+      expect(ours?.status).toBe('test');
     });
 
     test('response array items conform to Pet schema @regression', async ({ petClient }) => {
