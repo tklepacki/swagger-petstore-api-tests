@@ -28,3 +28,12 @@ jobs:
         if: success() || failure()
         with:
           paths: results.xml
+
+      - name: Test Report
+        uses: dorny/test-reporter@v3
+        if: success() || failure()
+        with:
+          name: Playwright API Tests
+          path: results.xml
+          reporter: java-junit
+          fail-on-error: true
