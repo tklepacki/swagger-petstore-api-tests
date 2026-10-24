@@ -21,4 +21,10 @@ jobs:
       - name: Run Tests
         run: |
              npm ci
-             npx playwright test
+             PLAYWRIGHT_JUNIT_OUTPUT_NAME=results.xml npx playwright test --reporter=list,junit
+
+      - name: Create Test Summary
+        uses: test-summary/action@dist
+        if: success() || failure()
+        with:
+          paths: results.xml
